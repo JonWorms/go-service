@@ -19,7 +19,7 @@ import (
 // argument logger is a log.Logger object, if run as a service logs to syslog
 type MainFunction func(string, *log.Logger)
 
-func sMain(serviceMain MainFunction, context *daemon.Context, pidPath string, cfgPath string) {
+func sMain(serviceMain MainFunction, context *daemon.Context, pidPath string, cfgPath string, useSyslog bool) {
 	var logger *log.Logger = log.Default()
 
 	if context != nil {
@@ -31,15 +31,15 @@ func sMain(serviceMain MainFunction, context *daemon.Context, pidPath string, cf
 			log.Fatal(err)
 		}
 		defer pidfile.Remove(pidPath)
-
-		// setup logging
-		// TODO: configurable log level
-		slog, err := syslog.NewLogger(syslog.LOG_INFO, int(syslog.LOG_DAEMON))
-		if err != nil {
-			log.Fatal(err)
-		}
-		logger = slog // replace default logger
 	}
+
+	// setup logging
+	// TODO: configurable log level
+	slog, err := syslog.NewLogger(syslog.LOG_INFO, int(syslog.LOG_DAEMON))
+	if err != nil {
+		log.Fatal(err)
+	}
+	logger = slog // replace default logger
 
 	// spool up service main function
 	go serviceMain(cfgPath, logger)
@@ -67,8 +67,10 @@ func Start(serviceMain MainFunction) {
 	// handle startup argument parsing
 	var pidFilePath string
 	var cfgFilePath string
+	var useSyslog bool
 	flag.StringVar(&pidFilePath, "pidfile", "", "supply path for pid file to run in daemon mode")
 	flag.StringVar(&cfgFilePath, "cfgfile", "", "path to config file")
+	flag.BoolVar(&useSyslog, "syslog", false, "set true to log to system log")
 	flag.Parse()
 
 	// if cfgFilePath is supplied, check that it exists, otherwise fatal error
@@ -86,11 +88,11 @@ func Start(serviceMain MainFunction) {
 		}
 		if child == nil {
 			// we're in the child process, continue
-			sMain(serviceMain, context, pidFilePath, cfgFilePath)
+			sMain(serviceMain, context, pidFilePath, cfgFilePath, useSyslog)
 		}
 	} else {
 		// just run the service
-		sMain(serviceMain, nil, pidFilePath, cfgFilePath)
+		sMain(serviceMain, nil, pidFilePath, cfgFilePath, useSyslog)
 	}
 
 }

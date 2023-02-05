@@ -29,8 +29,7 @@ After=network.target
 Type=simple
 User=some_service_user
 Group=some_service_group
-PIDFile=/var/run/my_exe.pid
-ExecStart=/path/to/my_exe --cfgfile=/path/to/my/config_file --pidfile=/var/run/my_exe.pid
+ExecStart=/path/to/my_exe --cfgfile=/path/to/my/config_file
 
 # Give a reasonable amount of time for the server to start up/shut down
 TimeoutSec=300
