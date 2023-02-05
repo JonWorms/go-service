@@ -20,7 +20,6 @@ import (
 type MainFunction func(string, *log.Logger)
 
 func sMain(serviceMain MainFunction, context *daemon.Context, pidPath string, cfgPath string, useSyslog bool) {
-	var logger *log.Logger = log.Default()
 
 	if context != nil {
 		defer context.Release()
@@ -34,12 +33,17 @@ func sMain(serviceMain MainFunction, context *daemon.Context, pidPath string, cf
 	}
 
 	// setup logging
-	// TODO: configurable log level
-	slog, err := syslog.NewLogger(syslog.LOG_INFO, int(syslog.LOG_DAEMON))
-	if err != nil {
-		log.Fatal(err)
+	var logger *log.Logger
+	if useSyslog {
+		// TODO: configurable log level
+		slog, err := syslog.NewLogger(syslog.LOG_INFO, int(syslog.LOG_DAEMON))
+		if err != nil {
+			log.Fatal(err)
+		}
+		logger = slog // replace default logger
+	} else {
+		logger = log.Default()
 	}
-	logger = slog // replace default logger
 
 	// spool up service main function
 	go serviceMain(cfgPath, logger)
