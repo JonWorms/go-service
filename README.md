@@ -29,7 +29,7 @@ After=network.target
 Type=simple
 User=some_service_user
 Group=some_service_group
-ExecStart=/path/to/my_exe --cfgfile=/path/to/my/config_file
+ExecStart=/path/to/my_exe -cfgfile=/path/to/my/config_file -syslog=true
 
 # Give a reasonable amount of time for the server to start up/shut down
 TimeoutSec=300
@@ -45,6 +45,7 @@ WantedBy=multi-user.target
 ```
 
 ### works with openrc too
+TODO: verify this is 100% correct (it's probably not)
 ```
 #!/sbin/openrc-run
   
